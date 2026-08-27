@@ -1,5 +1,5 @@
 // ============================================================
-//  main.js - Con autenticación por contraseña (1998)
+//  main.js - Con autenticación por contraseña ()
 //  + Portafolios con menú contextual
 //  + Contador de días de demo (27/08/2026 – 11/09/2026)
 // ============================================================
@@ -54,7 +54,7 @@ function isDemoExpired() {
 // ============================================================
 //  AUTENTICACIÓN
 // ============================================================
-const PASSWORD = 'VL18';
+const PASSWORD = '9907';
 const loginOverlay = document.getElementById('login-overlay');
 const appWrapper = document.getElementById('app-wrapper');
 const passwordInput = document.getElementById('password-input');
