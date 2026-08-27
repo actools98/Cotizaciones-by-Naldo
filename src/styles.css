@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400..900;1,400..900&family=Jost:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
 /* ============================================================
    Design Tokens — Tema "Lienxo" (editorial claro)
    Inspirado en el portafolio: fondo crema, líneas finas,
-   tipografía serif elegante + sans-serif con tracking amplio.
+   tipografía Outfit (moderna y limpia).
    ============================================================ */
 :root {
   --color-bg-main: #FBFAF8;         /* blanco cálido, casi blanco */
@@ -18,9 +18,9 @@
   --color-success: #6B8F71;         /* verde apagado */
   --color-danger: #B5675A;          /* terracota apagado */
 
-  --font-sans: 'Jost', 'Helvetica Neue', Arial, sans-serif;
-  --font-serif: 'Bodoni Moda', 'Didot', 'Playfair Display', Georgia, serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Outfit', 'Helvetica Neue', Arial, sans-serif;
+  --font-serif: 'Outfit', Georgia, serif;    /* Usamos Outfit también para títulos */
+  --font-mono: 'Outfit', 'JetBrains Mono', monospace; /* Opcional, mantén mono si prefieres */
 
   --text-h1: 2.4rem;
   --text-h2: 1.6rem;
