@@ -1,5 +1,4 @@
 // ============================================================
-//  main.js - Con autenticación por contraseña (1998)
 //  + Portafolios con menú contextual
 //  + Contador de días de demo (27/08/2026 – 11/09/2026)
 // ============================================================
