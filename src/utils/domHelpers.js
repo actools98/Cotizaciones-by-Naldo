@@ -1,35 +1,116 @@
 // domHelpers.js - Funciones para creación y manipulación del DOM
 
+// Estado de colapso por módulo (persistente en sesión)
+const collapsedModules = new Set();
+
+// Cargar estado de colapso desde localStorage
+function loadCollapsedState() {
+  try {
+    const saved = localStorage.getItem('actols_collapsed_modules');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      parsed.forEach(id => collapsedModules.add(id));
+    }
+  } catch (e) { /* ignore */ }
+}
+
+// Guardar estado de colapso en localStorage
+function saveCollapsedState() {
+  try {
+    localStorage.setItem('actols_collapsed_modules', JSON.stringify(Array.from(collapsedModules)));
+  } catch (e) { /* ignore */ }
+}
+
+// Cargar estado al inicio
+loadCollapsedState();
+
 export function createModuleCard(module, currency, convertFn, formatFn) {
   const { id, description, price } = module;
   const priceConverted = convertFn(price, currency);
   const priceFormatted = formatFn(priceConverted, currency);
+  
+  const isCollapsed = collapsedModules.has(id);
 
   const card = document.createElement('div');
   card.className = 'module-card';
+  if (isCollapsed) card.classList.add('collapsed');
   card.dataset.id = id;
   card.dataset.categoryId = module.category_id || '';
 
+  // Wrapper para el checkbox (siempre visible)
+  const checkboxWrapper = document.createElement('div');
+  checkboxWrapper.className = 'module-checkbox-wrapper';
+  
   const checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
   checkbox.dataset.id = id;
   checkbox.id = `mod-${id}`;
   checkbox.setAttribute('aria-label', `Seleccionar ${description}`);
+  checkboxWrapper.appendChild(checkbox);
 
-  const label = document.createElement('label');
+  // Contenido colapsable
+  const content = document.createElement('div');
+  content.className = 'module-content';
+  if (isCollapsed) content.classList.add('collapsed');
+
+  const label = document.createElement('span');
   label.className = 'module-label';
-  label.htmlFor = `mod-${id}`;
   label.textContent = description;
 
   const priceSpan = document.createElement('span');
   priceSpan.className = 'module-price';
   priceSpan.textContent = priceFormatted;
 
-  card.appendChild(checkbox);
-  card.appendChild(label);
-  card.appendChild(priceSpan);
+  // Botón de toggle (flecha)
+  const toggleBtn = document.createElement('button');
+  toggleBtn.className = 'module-toggle';
+  if (isCollapsed) toggleBtn.classList.add('collapsed');
+  toggleBtn.setAttribute('aria-label', isCollapsed ? 'Expandir servicio' : 'Colapsar servicio');
+  toggleBtn.type = 'button';
+  
+  const arrow = document.createElement('span');
+  arrow.className = 'arrow';
+  arrow.textContent = '▼';
+  toggleBtn.appendChild(arrow);
+
+  // Evento toggle
+  toggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleModule(card, content, toggleBtn, id);
+  });
+
+  // También toggle al hacer clic en la card (excepto en checkbox)
+  card.addEventListener('click', (e) => {
+    // Si el clic fue en el checkbox o en el botón toggle, no hacer nada
+    if (e.target.closest('input[type="checkbox"]') || e.target.closest('.module-toggle')) {
+      return;
+    }
+    toggleModule(card, content, toggleBtn, id);
+  });
+
+  content.appendChild(label);
+  content.appendChild(priceSpan);
+
+  card.appendChild(checkboxWrapper);
+  card.appendChild(content);
+  card.appendChild(toggleBtn);
 
   return card;
+}
+
+function toggleModule(card, content, toggleBtn, id) {
+  const isCollapsed = card.classList.toggle('collapsed');
+  content.classList.toggle('collapsed');
+  toggleBtn.classList.toggle('collapsed');
+  
+  toggleBtn.setAttribute('aria-label', isCollapsed ? 'Expandir servicio' : 'Colapsar servicio');
+  
+  if (isCollapsed) {
+    collapsedModules.add(id);
+  } else {
+    collapsedModules.delete(id);
+  }
+  saveCollapsedState();
 }
 
 export function renderModulesByCategory(container, modules, categories, currency, convertFn, formatFn) {
@@ -87,6 +168,13 @@ export function createAdminModuleCard(module, onDelete, onEdit) {
   card.dataset.id = id;
   card.dataset.categoryId = module.category_id || '';
 
+  // En modo administración NO hay toggle, solo el contenido completo
+  const content = document.createElement('div');
+  content.className = 'module-content';
+  content.style.maxHeight = 'none';
+  content.style.opacity = '1';
+  content.style.marginLeft = '0';
+
   const info = document.createElement('span');
   info.className = 'module-label';
   info.textContent = description;
@@ -117,9 +205,11 @@ export function createAdminModuleCard(module, onDelete, onEdit) {
   actions.appendChild(editBtn);
   actions.appendChild(deleteBtn);
 
-  card.appendChild(info);
-  card.appendChild(priceSpan);
-  card.appendChild(actions);
+  content.appendChild(info);
+  content.appendChild(priceSpan);
+  content.appendChild(actions);
+
+  card.appendChild(content);
 
   return card;
 }
@@ -194,4 +284,37 @@ export function renderAdminModulesByCategory(container, modules, categories, onD
     section.appendChild(list);
     container.appendChild(section);
   }
+}
+
+// Función para colapsar todos los módulos (útil si quieres agregar un botón "Colapsar todos")
+export function collapseAllModules() {
+  // Esta función se puede llamar desde main.js si quieres agregar un botón
+  document.querySelectorAll('.module-card:not(.admin-mode)').forEach(card => {
+    const id = card.dataset.id;
+    if (id && !collapsedModules.has(id)) {
+      collapsedModules.add(id);
+      card.classList.add('collapsed');
+      const content = card.querySelector('.module-content');
+      const toggle = card.querySelector('.module-toggle');
+      if (content) content.classList.add('collapsed');
+      if (toggle) toggle.classList.add('collapsed');
+    }
+  });
+  saveCollapsedState();
+}
+
+// Función para expandir todos los módulos
+export function expandAllModules() {
+  document.querySelectorAll('.module-card:not(.admin-mode)').forEach(card => {
+    const id = card.dataset.id;
+    if (id && collapsedModules.has(id)) {
+      collapsedModules.delete(id);
+      card.classList.remove('collapsed');
+      const content = card.querySelector('.module-content');
+      const toggle = card.querySelector('.module-toggle');
+      if (content) content.classList.remove('collapsed');
+      if (toggle) toggle.classList.remove('collapsed');
+    }
+  });
+  saveCollapsedState();
 }
