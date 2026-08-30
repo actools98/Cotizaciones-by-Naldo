@@ -1,5 +1,5 @@
 // ============================================================
-//  main.js - Con autenticación por contraseña ()
+//  main.js - Con autenticación por contraseña (1998)
 //  + Portafolios con menú contextual
 //  + Contador de días de demo (27/08/2026 – 11/09/2026)
 // ============================================================
@@ -54,7 +54,7 @@ function isDemoExpired() {
 // ============================================================
 //  AUTENTICACIÓN
 // ============================================================
-const PASSWORD = '9907';
+const PASSWORD = 'VL18';
 const loginOverlay = document.getElementById('login-overlay');
 const appWrapper = document.getElementById('app-wrapper');
 const passwordInput = document.getElementById('password-input');
@@ -383,15 +383,15 @@ function destroySortable() {
 }
 
 // ============================================================
-//  CRUD: MÓDULOS
+//  CRUD: MÓDULOS - MODIFICADO PARA ACEPTAR PRECIO 0
 // ============================================================
 async function onAddModule(e) {
   e.preventDefault();
   const desc = moduleDescInput.value.trim();
   const price = parseFloat(modulePriceInput.value);
   const detail = moduleDetailInput.value.trim() || null;
-  if (!desc || isNaN(price) || price <= 0) {
-    alert('Ingrese nombre y precio válido.');
+  if (!desc || isNaN(price) || price < 0) {
+    alert('Ingrese nombre y precio válido. El precio puede ser 0.');
     return;
   }
   const categoryId = moduleCategorySelect.value || currentCategories[0]?.id || null;
@@ -442,8 +442,8 @@ async function saveEditModule() {
   const price = parseFloat(editModulePrice.value);
   const detail = editModuleDetail.value.trim() || null;
   const categoryId = editModuleCategory.value || currentCategories[0]?.id || null;
-  if (!name || isNaN(price) || price <= 0) {
-    alert('Complete los campos obligatorios.');
+  if (!name || isNaN(price) || price < 0) {
+    alert('Complete los campos obligatorios. El precio puede ser 0.');
     return;
   }
   try {
