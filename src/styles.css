@@ -1571,117 +1571,92 @@ dialog::backdrop {
   margin-bottom: 0.25rem;
 }
 /* ============================================================
-   ACORDEÓN PARA MÓDULOS (colapsar/expandir)
+   ACORDEÓN POR CATEGORÍA
    ============================================================ */
 
-/* Botón de toggle en cada módulo */
-.module-toggle {
-  background: none;
-  border: none;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  font-size: 1.2rem;
-  padding: 0 var(--space-xs);
-  transition: transform 0.3s ease, color 0.2s ease;
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+/* Header de categoría clickeable */
+.category-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
+  margin-bottom: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
   border-radius: var(--radius-sm);
 }
 
-.module-toggle:hover {
+.category-header:hover {
+  background: var(--color-primary-muted);
+}
+
+.category-header h3 {
+  font-family: var(--font-serif);
+  font-size: var(--text-h2);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--color-text-primary);
-  background-color: var(--color-primary-muted);
+  margin: 0;
 }
 
-.module-toggle .arrow {
-  display: inline-block;
+.category-counter {
+  font-size: var(--text-small);
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  margin-left: auto;
+  margin-right: var(--space-sm);
+}
+
+.category-arrow {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
   transition: transform 0.3s ease;
+  display: inline-block;
+  width: 20px;
+  text-align: center;
 }
 
-.module-toggle.collapsed .arrow {
-  transform: rotate(-90deg);
-}
-
-/* Contenido del módulo (colapsable) */
-.module-content {
+/* Wrapper del contenido de la categoría (colapsable) */
+.category-modules-wrapper {
   overflow: hidden;
-  transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
-  max-height: 500px; /* Altura máxima cuando está expandido */
+  transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.3s ease;
+  max-height: 2000px; /* Altura máxima cuando está expandido */
   opacity: 1;
-  margin-left: var(--space-sm);
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
 }
 
-.module-content.collapsed {
+.category-modules-wrapper.collapsed {
   max-height: 0;
   opacity: 0;
-  margin-left: 0;
-  padding: 0;
+  margin-bottom: 0;
   overflow: hidden;
 }
 
-/* Ajustes para modo administración */
-.module-card.admin-mode .module-content {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
+/* Ajustes para el modo administración (sin acordeón) */
+.category-section .category-header .category-arrow {
+  display: none; /* Ocultar flecha en modo admin */
 }
 
-.module-card.admin-mode .module-content .module-label {
-  flex: 1;
+.category-section .category-header .category-counter {
+  display: none; /* Ocultar contador en modo admin */
 }
 
-.module-card.admin-mode .module-content .module-price {
-  flex-shrink: 0;
-}
-
-/* El checkbox permanece visible siempre */
-.module-card .module-checkbox-wrapper {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  margin-right: var(--space-xs);
-}
-
-/* Ajustes responsive para móvil */
+/* Responsive */
 @media (max-width: 480px) {
-  .module-content {
+  .category-header {
+    padding: var(--space-xs) var(--space-sm);
     flex-wrap: wrap;
     gap: var(--space-xs);
   }
   
-  .module-card .module-content .module-label {
-    flex: 1 1 60%;
-    min-width: 0;
+  .category-header h3 {
+    font-size: 1.2rem;
   }
   
-  .module-card .module-content .module-price {
-    margin-left: auto;
+  .category-counter {
+    font-size: 0.7rem;
   }
-}
-
-/* Estilos para cuando el módulo está colapsado (menos padding) */
-.module-card.collapsed {
-  padding-top: var(--space-xs);
-  padding-bottom: var(--space-xs);
-}
-
-.module-card.collapsed .module-content {
-  max-height: 0;
-  opacity: 0;
-  margin: 0;
-  padding: 0;
-}
-
-/* Animación suave para el checkbox cuando colapsa */
-.module-card.collapsed input[type="checkbox"] {
-  opacity: 1;
 }
