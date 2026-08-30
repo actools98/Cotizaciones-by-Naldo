@@ -141,7 +141,60 @@ const editModuleSave = document.getElementById('edit-module-save');
 const editModuleCancel = document.getElementById('edit-module-cancel');
 
 let currentEditingModuleId = null;
+// ============================================================
+//  BOTONES PARA COLAPSAR/EXPANDIR TODO (OPCIONAL)
+// ============================================================
+// Puedes agregar estos botones en el header o en otro lugar
 
+// Función para agregar botones de colapsar/expandir
+function addCollapseButtons() {
+  // Buscar el header de la sección de módulos o crear un contenedor
+  const modulesContainer = document.getElementById('modules-container');
+  if (!modulesContainer) return;
+  
+  // Verificar si ya existen los botones
+  if (document.getElementById('collapse-controls')) return;
+  
+  const controls = document.createElement('div');
+  controls.id = 'collapse-controls';
+  controls.style.display = 'flex';
+  controls.style.gap = 'var(--space-sm)';
+  controls.style.marginBottom = 'var(--space-md)';
+  controls.style.justifyContent = 'flex-end';
+  
+  const collapseBtn = document.createElement('button');
+  collapseBtn.className = 'btn btn-secondary';
+  collapseBtn.textContent = 'Colapsar todo';
+  collapseBtn.addEventListener('click', () => {
+    const { collapseAllModules } = await import('./utils/domHelpers.js');
+    collapseAllModules();
+    // Actualizar visualmente los toggles
+    document.querySelectorAll('.module-card:not(.admin-mode) .module-toggle').forEach(toggle => {
+      toggle.classList.add('collapsed');
+    });
+  });
+  
+  const expandBtn = document.createElement('button');
+  expandBtn.className = 'btn btn-secondary';
+  expandBtn.textContent = 'Expandir todo';
+  expandBtn.addEventListener('click', () => {
+    const { expandAllModules } = await import('./utils/domHelpers.js');
+    expandAllModules();
+    document.querySelectorAll('.module-card:not(.admin-mode) .module-toggle').forEach(toggle => {
+      toggle.classList.remove('collapsed');
+    });
+  });
+  
+  controls.appendChild(collapseBtn);
+  controls.appendChild(expandBtn);
+  
+  // Insertar antes del contenedor de módulos
+  modulesContainer.parentNode.insertBefore(controls, modulesContainer);
+}
+
+// Llamar a esta función en initApp() o renderAll() cuando no esté en modo edición
+// En renderAll(), dentro del else de isEditMode:
+// addCollapseButtons();
 // ============================================================
 //  ESTADO
 // ============================================================
