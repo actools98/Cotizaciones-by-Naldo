@@ -183,7 +183,7 @@ app.patch('/api/categories/reorder', async (req, res) => {
   }
 });
 
-// ---- Rutas para módulos (con detail) ----
+// ---- Rutas para módulos (con detail) - MODIFICADO PARA ACEPTAR PRECIO 0 ----
 app.get('/api/modules', async (req, res) => {
   try {
     const modules = await db.all(`
@@ -200,8 +200,8 @@ app.get('/api/modules', async (req, res) => {
 
 app.post('/api/modules', async (req, res) => {
   const { description, price, category_id, detail } = req.body;
-  if (!description || price === undefined) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  if (!description || price === undefined || price < 0) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios o precio inválido. El precio debe ser 0 o mayor.' });
   }
   try {
     const id = `mod-${Date.now()}`;
@@ -227,8 +227,8 @@ app.post('/api/modules', async (req, res) => {
 app.put('/api/modules/:id', async (req, res) => {
   const { id } = req.params;
   const { description, price, category_id, detail } = req.body;
-  if (!description || price === undefined) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  if (!description || price === undefined || price < 0) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios o precio inválido. El precio debe ser 0 o mayor.' });
   }
   try {
     await db.run(
