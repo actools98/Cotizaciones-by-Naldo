@@ -14,7 +14,7 @@ import Sortable from 'sortablejs';
 // ============================================================
 //  CONTROL DE DEMO (expirada o no)
 // ============================================================
-const DEMO_END = new Date(2026, 8, 11); // 11 de septiembre de 2026
+const DEMO_END = new Date(2026, 8, 14); // 11 de septiembre de 2026
 const FORCE_EXPIRED_KEY = 'actols_force_expired';
 
 function isDemoExpired() {
@@ -217,7 +217,7 @@ async function initApp() {
 }
 
 // ============================================================
-//  CONTADOR DE DÍAS DE DEMO (27/08/2026 – 11/09/2026)
+//  CONTADOR DE DÍAS DE DEMO (27/08/2026 – 14/09/2026)
 // ============================================================
 function updateDemoCounter() {
   const el = document.getElementById('demo-counter');
@@ -225,7 +225,7 @@ function updateDemoCounter() {
 
   const now = new Date();
   const start = new Date(2026, 7, 27); // 27 de agosto
-  const end = new Date(2026, 8, 11);   // 11 de septiembre
+  const end = new Date(2026, 8, 14);   // 11 de septiembre
 
   let days = 0;
   if (now < start) {
