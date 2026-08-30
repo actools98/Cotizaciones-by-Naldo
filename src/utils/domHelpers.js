@@ -1,15 +1,15 @@
 // domHelpers.js - Funciones para creación y manipulación del DOM
 
-// Estado de colapso por módulo (persistente en sesión)
-const collapsedModules = new Set();
+// Estado de colapso por categoría (persistente en sesión)
+const collapsedCategories = new Set();
 
 // Cargar estado de colapso desde localStorage
 function loadCollapsedState() {
   try {
-    const saved = localStorage.getItem('actols_collapsed_modules');
+    const saved = localStorage.getItem('actols_collapsed_categories');
     if (saved) {
       const parsed = JSON.parse(saved);
-      parsed.forEach(id => collapsedModules.add(id));
+      parsed.forEach(id => collapsedCategories.add(id));
     }
   } catch (e) { /* ignore */ }
 }
@@ -17,7 +17,7 @@ function loadCollapsedState() {
 // Guardar estado de colapso en localStorage
 function saveCollapsedState() {
   try {
-    localStorage.setItem('actols_collapsed_modules', JSON.stringify(Array.from(collapsedModules)));
+    localStorage.setItem('actols_collapsed_categories', JSON.stringify(Array.from(collapsedCategories)));
   } catch (e) { /* ignore */ }
 }
 
@@ -28,89 +28,32 @@ export function createModuleCard(module, currency, convertFn, formatFn) {
   const { id, description, price } = module;
   const priceConverted = convertFn(price, currency);
   const priceFormatted = formatFn(priceConverted, currency);
-  
-  const isCollapsed = collapsedModules.has(id);
 
   const card = document.createElement('div');
   card.className = 'module-card';
-  if (isCollapsed) card.classList.add('collapsed');
   card.dataset.id = id;
   card.dataset.categoryId = module.category_id || '';
 
-  // Wrapper para el checkbox (siempre visible)
-  const checkboxWrapper = document.createElement('div');
-  checkboxWrapper.className = 'module-checkbox-wrapper';
-  
   const checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
   checkbox.dataset.id = id;
   checkbox.id = `mod-${id}`;
   checkbox.setAttribute('aria-label', `Seleccionar ${description}`);
-  checkboxWrapper.appendChild(checkbox);
 
-  // Contenido colapsable
-  const content = document.createElement('div');
-  content.className = 'module-content';
-  if (isCollapsed) content.classList.add('collapsed');
-
-  const label = document.createElement('span');
+  const label = document.createElement('label');
   label.className = 'module-label';
+  label.htmlFor = `mod-${id}`;
   label.textContent = description;
 
   const priceSpan = document.createElement('span');
   priceSpan.className = 'module-price';
   priceSpan.textContent = priceFormatted;
 
-  // Botón de toggle (flecha)
-  const toggleBtn = document.createElement('button');
-  toggleBtn.className = 'module-toggle';
-  if (isCollapsed) toggleBtn.classList.add('collapsed');
-  toggleBtn.setAttribute('aria-label', isCollapsed ? 'Expandir servicio' : 'Colapsar servicio');
-  toggleBtn.type = 'button';
-  
-  const arrow = document.createElement('span');
-  arrow.className = 'arrow';
-  arrow.textContent = '▼';
-  toggleBtn.appendChild(arrow);
-
-  // Evento toggle
-  toggleBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleModule(card, content, toggleBtn, id);
-  });
-
-  // También toggle al hacer clic en la card (excepto en checkbox)
-  card.addEventListener('click', (e) => {
-    // Si el clic fue en el checkbox o en el botón toggle, no hacer nada
-    if (e.target.closest('input[type="checkbox"]') || e.target.closest('.module-toggle')) {
-      return;
-    }
-    toggleModule(card, content, toggleBtn, id);
-  });
-
-  content.appendChild(label);
-  content.appendChild(priceSpan);
-
-  card.appendChild(checkboxWrapper);
-  card.appendChild(content);
-  card.appendChild(toggleBtn);
+  card.appendChild(checkbox);
+  card.appendChild(label);
+  card.appendChild(priceSpan);
 
   return card;
-}
-
-function toggleModule(card, content, toggleBtn, id) {
-  const isCollapsed = card.classList.toggle('collapsed');
-  content.classList.toggle('collapsed');
-  toggleBtn.classList.toggle('collapsed');
-  
-  toggleBtn.setAttribute('aria-label', isCollapsed ? 'Expandir servicio' : 'Colapsar servicio');
-  
-  if (isCollapsed) {
-    collapsedModules.add(id);
-  } else {
-    collapsedModules.delete(id);
-  }
-  saveCollapsedState();
 }
 
 export function renderModulesByCategory(container, modules, categories, currency, convertFn, formatFn) {
@@ -121,6 +64,7 @@ export function renderModulesByCategory(container, modules, categories, currency
     container.appendChild(msg);
     return;
   }
+
   const grouped = {};
   categories.forEach(cat => {
     grouped[cat.id] = {
@@ -128,18 +72,59 @@ export function renderModulesByCategory(container, modules, categories, currency
       modules: modules.filter(m => m.category_id === cat.id) || []
     };
   });
+
   for (const catId in grouped) {
     const { category, modules: mods } = grouped[catId];
+    const isCollapsed = collapsedCategories.has(category.id);
+
     const section = document.createElement('div');
     section.className = 'category-section';
     section.dataset.categoryId = category.id;
 
+    // --- HEADER de categoría (clickeable) ---
     const header = document.createElement('div');
     header.className = 'category-header';
+    header.setAttribute('role', 'button');
+    header.setAttribute('aria-expanded', !isCollapsed);
+    header.setAttribute('tabindex', '0');
+    header.style.cursor = 'pointer';
+
+    // Título
     const title = document.createElement('h3');
     title.textContent = category.name;
     header.appendChild(title);
+
+    // Contador de módulos
+    const counter = document.createElement('span');
+    counter.className = 'category-counter';
+    counter.textContent = `${mods.length} servicio${mods.length !== 1 ? 's' : ''}`;
+    header.appendChild(counter);
+
+    // Flecha de toggle
+    const arrow = document.createElement('span');
+    arrow.className = 'category-arrow';
+    arrow.textContent = isCollapsed ? '▶' : '▼';
+    header.appendChild(arrow);
+
+    // Evento toggle al hacer clic en el header
+    header.addEventListener('click', () => {
+      toggleCategory(section, header, arrow, category.id);
+    });
+
+    // También con teclado (accesibilidad)
+    header.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleCategory(section, header, arrow, category.id);
+      }
+    });
+
     section.appendChild(header);
+
+    // --- LISTA de módulos (contenido colapsable) ---
+    const listWrapper = document.createElement('div');
+    listWrapper.className = 'category-modules-wrapper';
+    if (isCollapsed) listWrapper.classList.add('collapsed');
 
     const list = document.createElement('div');
     list.className = 'module-list';
@@ -156,9 +141,26 @@ export function renderModulesByCategory(container, modules, categories, currency
         list.appendChild(card);
       });
     }
-    section.appendChild(list);
+
+    listWrapper.appendChild(list);
+    section.appendChild(listWrapper);
     container.appendChild(section);
   }
+}
+
+function toggleCategory(section, header, arrow, categoryId) {
+  const wrapper = section.querySelector('.category-modules-wrapper');
+  const isCollapsed = wrapper.classList.toggle('collapsed');
+  
+  header.setAttribute('aria-expanded', !isCollapsed);
+  arrow.textContent = isCollapsed ? '▶' : '▼';
+  
+  if (isCollapsed) {
+    collapsedCategories.add(categoryId);
+  } else {
+    collapsedCategories.delete(categoryId);
+  }
+  saveCollapsedState();
 }
 
 export function createAdminModuleCard(module, onDelete, onEdit) {
@@ -167,13 +169,6 @@ export function createAdminModuleCard(module, onDelete, onEdit) {
   card.className = 'module-card admin-mode';
   card.dataset.id = id;
   card.dataset.categoryId = module.category_id || '';
-
-  // En modo administración NO hay toggle, solo el contenido completo
-  const content = document.createElement('div');
-  content.className = 'module-content';
-  content.style.maxHeight = 'none';
-  content.style.opacity = '1';
-  content.style.marginLeft = '0';
 
   const info = document.createElement('span');
   info.className = 'module-label';
@@ -205,11 +200,9 @@ export function createAdminModuleCard(module, onDelete, onEdit) {
   actions.appendChild(editBtn);
   actions.appendChild(deleteBtn);
 
-  content.appendChild(info);
-  content.appendChild(priceSpan);
-  content.appendChild(actions);
-
-  card.appendChild(content);
+  card.appendChild(info);
+  card.appendChild(priceSpan);
+  card.appendChild(actions);
 
   return card;
 }
@@ -222,6 +215,7 @@ export function renderAdminModulesByCategory(container, modules, categories, onD
     container.appendChild(msg);
     return;
   }
+
   const grouped = {};
   categories.forEach(cat => {
     grouped[cat.id] = {
@@ -229,12 +223,14 @@ export function renderAdminModulesByCategory(container, modules, categories, onD
       modules: modules.filter(m => m.category_id === cat.id) || []
     };
   });
+
   for (const catId in grouped) {
     const { category, modules: mods } = grouped[catId];
     const section = document.createElement('div');
     section.className = 'category-section';
     section.dataset.categoryId = category.id;
 
+    // En modo administración, las categorías SIEMPRE están expandidas
     const header = document.createElement('div');
     header.className = 'category-header';
 
@@ -286,34 +282,35 @@ export function renderAdminModulesByCategory(container, modules, categories, onD
   }
 }
 
-// Función para colapsar todos los módulos (útil si quieres agregar un botón "Colapsar todos")
-export function collapseAllModules() {
-  // Esta función se puede llamar desde main.js si quieres agregar un botón
-  document.querySelectorAll('.module-card:not(.admin-mode)').forEach(card => {
-    const id = card.dataset.id;
-    if (id && !collapsedModules.has(id)) {
-      collapsedModules.add(id);
-      card.classList.add('collapsed');
-      const content = card.querySelector('.module-content');
-      const toggle = card.querySelector('.module-toggle');
-      if (content) content.classList.add('collapsed');
-      if (toggle) toggle.classList.add('collapsed');
+// Función para colapsar todas las categorías
+export function collapseAllCategories() {
+  document.querySelectorAll('.category-section').forEach(section => {
+    const categoryId = section.dataset.categoryId;
+    if (categoryId && !collapsedCategories.has(categoryId)) {
+      collapsedCategories.add(categoryId);
+      const wrapper = section.querySelector('.category-modules-wrapper');
+      const arrow = section.querySelector('.category-arrow');
+      const header = section.querySelector('.category-header');
+      if (wrapper) wrapper.classList.add('collapsed');
+      if (arrow) arrow.textContent = '▶';
+      if (header) header.setAttribute('aria-expanded', 'false');
     }
   });
   saveCollapsedState();
 }
 
-// Función para expandir todos los módulos
-export function expandAllModules() {
-  document.querySelectorAll('.module-card:not(.admin-mode)').forEach(card => {
-    const id = card.dataset.id;
-    if (id && collapsedModules.has(id)) {
-      collapsedModules.delete(id);
-      card.classList.remove('collapsed');
-      const content = card.querySelector('.module-content');
-      const toggle = card.querySelector('.module-toggle');
-      if (content) content.classList.remove('collapsed');
-      if (toggle) toggle.classList.remove('collapsed');
+// Función para expandir todas las categorías
+export function expandAllCategories() {
+  document.querySelectorAll('.category-section').forEach(section => {
+    const categoryId = section.dataset.categoryId;
+    if (categoryId && collapsedCategories.has(categoryId)) {
+      collapsedCategories.delete(categoryId);
+      const wrapper = section.querySelector('.category-modules-wrapper');
+      const arrow = section.querySelector('.category-arrow');
+      const header = section.querySelector('.category-header');
+      if (wrapper) wrapper.classList.remove('collapsed');
+      if (arrow) arrow.textContent = '▼';
+      if (header) header.setAttribute('aria-expanded', 'true');
     }
   });
   saveCollapsedState();
