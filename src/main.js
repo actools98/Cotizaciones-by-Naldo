@@ -53,7 +53,7 @@ function isDemoExpired() {
 // ============================================================
 //  AUTENTICACIÓN
 // ============================================================
-const PASSWORD = 'BN99';
+const PASSWORD = '0101';
 const loginOverlay = document.getElementById('login-overlay');
 const appWrapper = document.getElementById('app-wrapper');
 const passwordInput = document.getElementById('password-input');
